@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+
+<html>
+
+
+
+
+<head>
+
+	<title>Home Security Monitoring</title>
+
+	<style>
+		.loader {
+
+			width: 50px;
+
+			height: 50px;
+
+			border-radius: 50%;
+
+			border: 4px solid #f3f3f35d;
+
+			border-top: 4px solid #ffdf61;
+
+			animation: spin 1s linear infinite;
+
+		}
+
+
+
+
+		@keyframes spin {
+
+			0% {
+
+				transform: rotate(0deg);
+
+			}
+
+
+
+
+			100% {
+
+				transform: rotate(360deg);
+
+			}
+
+		}
+
+
+
+
+		#loader {
+
+			position: fixed;
+
+			background-color: rgba(246, 237, 223, 0.476);
+
+			backdrop-filter: blur(5px);
+
+			z-index: 1000000;
+
+			width: 100dvw;
+
+			height: 100dvh;
+
+			top: 0;
+
+			display: flex;
+
+			justify-content: center;
+
+			align-items: center;
+
+		}
+
+
+
+
+		body {
+
+			font-family: Arial, sans-serif;
+
+			margin: 20px;
+
+		}
+
+
+
+
+		h1 {
+
+			text-align: center;
+
+		}
+
+
+
+
+		#userName {
+
+			font-size: 18px;
+
+			text-align: center;
+
+			margin-top: 20px;
+
+			font-weight: bold;
+
+		}
+
+
+
+
+		#temperature {
+
+			font-size: 24px;
+
+			font-weight: bold;
+
+			text-align: center;
+
+			margin-top: 40px;
+
+		}
+
+
+
+
+		#doorStatus {
+
+			font-size: 18px;
+
+			text-align: center;
+
+			margin-top: 20px;
+
+		}
+
+
+
+
+		* {
+
+			border: 0;
+
+			box-sizing: border-box;
+
+			margin: 0;
+
+			padding: 0;
+
+		}
+
+
+
+
+		:root {
+
+			--hue: 223;
+
+			--bg: hsl(var(--hue), 10%, 70%);
+
+			--fg: hsl(var(--hue), 10%, 10%);
+
+			--primary: hsl(var(--hue), 90%, 55%);
+
+			--trans-dur: 0.3s;
+
+			font-size: calc(16px + (20 - 16) * (100vw - 320px) / (1280 - 320));
+
+		}
+
+
+
+
+		body,
+
+		button {
+
+			font: 1em/1.5 Montserrat, sans-serif;
+
+		}
+
+
+
+
+		body {
+
+			background-color: var(--bg);
+
+			color: var(--fg);
+
+			height: 100vh;
+
+			display: grid;
+
+			place-items: center;
+
+			transition:
+
+				background-color var(--trans-dur),
+
+				color var(--trans-dur);
+
+		}
+
+
+
+
+		.t,
+
+		.t__inner,
+
+		.t__inner:before,
+
+		.t__inner:after,
+
+		.t__drag {
+
+			border-radius: 50%;
+
+		}
+
+
+
+
+		.t {
+
+			--temp-hue: 50;
+
+			box-shadow:
+
+				0 0 0.1em hsl(var(--hue), 10%, 90%),
+
+				0 0 0.3em hsl(var(--hue), 10%, 80%),
+
+				0 0 0.1em hsl(var(--hue), 10%, 40%) inset;
+
+			display: grid;
+
+			place-items: center;
+
+			position: relative;
+
+			width: 16em;
+
+			height: 16em;
+
+			transition: box-shadow 0.3s;
+
+			z-index: 0;
+
+		}
+
+
+
+
+		.t__inner {
+
+			background-color: hsl(var(--hue), 10%, 80%);
+
+			position: relative;
+
+			width: 11.5em;
+
+			height: 11.5em;
+
+			transition: background-color 0.3s;
+
+		}
+
+
+
+
+		.t__inner:before,
+
+		.t__inner:after {
+
+			content: "";
+
+			display: block;
+
+			position: absolute;
+
+		}
+
+
+
+
+		.t__inner:before {
+
+			background-image: linear-gradient(hsl(var(--hue), 10%, 95%), hsl(var(--hue), 10%, 65%));
+
+			top: -0.25em;
+
+			left: -0.25em;
+
+			width: 12em;
+
+			height: 12em;
+
+			z-index: -1;
+
+		}
+
+
+
+
+		.t__inner:after {
+
+			background-image: linear-gradient(hsl(var(--temp-hue), 90%, 100%), hsl(var(--temp-hue), 90%, 50%));
+
+			box-shadow:
+
+				0 -0.25em 2em hsla(var(--temp-hue), 90%, 55%, 0.3),
+
+				0 2em 1em hsl(var(--temp-hue), 20%, 55%);
+
+			top: -0.25em;
+
+			left: -0.375em;
+
+			width: 12.25em;
+
+			height: 12.25em;
+
+			z-index: -2;
+
+		}
+
+
+
+
+		.t__drag,
+
+		.t__value,
+
+		.t__units {
+
+			position: absolute;
+
+		}
+
+
+
+
+		.t__drag,
+
+		.t__unit {
+
+			background: transparent;
+
+			-webkit-appearance: none;
+
+			appearance: none;
+
+		}
+
+
+
+
+		.t__drag {
+
+			cursor: grab;
+
+			display: block;
+
+			width: 100%;
+
+			height: 100%;
+
+			z-index: 2;
+
+			-webkit-tap-highlight-color: transparent;
+
+		}
+
+
+
+
+		.t__drag:focus {
+
+			outline: transparent;
+
+		}
+
+
+
+
+		.t__arrows {
+
+			display: block;
+
+			position: absolute;
+
+			top: -2.25em;
+
+			left: -2.25em;
+
+			opacity: 0;
+
+			width: 16em;
+
+			height: auto;
+
+			transition: opacity 0.15s linear;
+
+			z-index: 1;
+
+		}
+
+
+
+
+		.t__drag:not(.t__drag--dragging):hover~.t__arrows {
+
+			opacity: 1;
+
+			transition-delay: 0.3s;
+
+		}
+
+
+
+
+		.t__drag--dragging~.t__arrows {
+
+			opacity: 0;
+
+			transition-delay: 0s;
+
+		}
+
+
+
+
+		.t__drag--dragging~.t__units {
+
+			z-index: 0;
+
+		}
+
+
+
+
+		.t__value,
+
+		.t__unit {
+
+			text-shadow: 0 0.15em 0.1em hsla(var(--hue), 10%, 10%, 0.1);
+
+		}
+
+
+
+
+		.t__value {
+
+			display: flex;
+
+			justify-content: flex-end;
+
+			align-items: center;
+
+			padding-right: 3em;
+
+			inset: 0;
+
+			z-index: 0;
+
+		}
+
+
+
+
+		.t__digit,
+
+		.t__degree {
+
+			display: inline-block;
+
+			line-height: 1;
+
+			-webkit-user-select: none;
+
+			user-select: none;
+
+		}
+
+
+
+
+		.t__digit {
+
+			font-size: 3em;
+
+			font-weight: 300;
+
+			text-align: center;
+
+			width: 2ch;
+
+		}
+
+
+
+
+		.t__degree {
+
+			color: hsl(var(--hue), 10%, 50%);
+
+			font-size: 2em;
+
+			transform: translateY(-0.5ch);
+
+		}
+
+
+
+
+		.t__units {
+
+			top: calc(50% - 1.5em);
+
+			right: 1.5em;
+
+			z-index: 3;
+
+		}
+
+
+
+
+		.t__unit {
+
+			color: hsl(var(--hue), 10%, 65%);
+
+			display: block;
+
+			font-size: 1em;
+
+			font-weight: 500;
+
+			line-height: 1;
+
+			width: 1.5em;
+
+			height: 1.5em;
+
+		}
+
+
+
+
+		.t__unit[aria-pressed="true"] {
+
+			color: currentColor;
+
+		}
+
+
+
+
+		.t__sr {
+
+			clip: rect(1px, 1px, 1px, 1px);
+
+			overflow: hidden;
+
+			position: absolute;
+
+			width: 1px;
+
+			height: 1px;
+
+		}
+
+
+
+
+		/* Dark theme */
+
+		@media (prefers-color-scheme: dark) {
+
+			:root {
+
+				--bg: hsl(var(--hue), 10%, 20%);
+
+				--fg: hsl(var(--hue), 10%, 90%);
+
+			}
+
+
+
+
+			.t {
+
+				box-shadow:
+
+					0 0 0.1em hsl(var(--hue), 10%, 40%),
+
+					0 0 0.3em hsl(var(--hue), 10%, 30%),
+
+					0 0 0.1em hsl(var(--hue), 10%, 0%) inset;
+
+			}
+
+
+
+
+			.t__inner {
+
+				background-color: hsl(var(--hue), 10%, 30%);
+
+			}
+
+
+
+
+			.t__inner:before {
+
+				background-image: linear-gradient(hsl(var(--hue), 10%, 45%), hsl(var(--hue), 10%, 15%));
+
+			}
+
+
+
+
+			.t__inner:after {
+
+				background-image: linear-gradient(hsl(var(--temp-hue), 90%, 10%), hsl(var(--temp-hue), 90%, 50%));
+
+				box-shadow:
+
+					0 -0.25em 2em hsla(var(--temp-hue), 90%, 55%, 0.3),
+
+					0 2em 1em hsl(var(--temp-hue), 20%, 25%);
+
+			}
+
+
+
+
+			.t__value {
+
+				text-shadow: 0 0.15em 0.1em hsla(var(--hue), 10%, 10%, 0.2);
+
+			}
+
+
+
+
+			.t__degree {
+
+				color: hsl(var(--hue), 10%, 70%);
+
+			}
+
+
+
+
+			.t__unit {
+
+				color: hsl(var(--hue), 10%, 45%);
+
+			}
+
+		}
+	</style>
+
+	<script>
+
+		// Function to fetch temperature data from Firebase
+
+		function fetchTemperature() {
+
+			fetch('https://esp32app2-default-rtdb.firebaseio.com/HOME%20SECURITY%20SYSTEM/Smoke%20Detected%20Temp:%20.json')
+
+				.then(response => response.json())
+
+				.then(data => {
+
+					// Display temperature data on the web page
+
+					const loader = document.getElementById("loader");
+
+					console.log(data);
+
+					if (data != "nan") {
+
+						document.getElementById('temperature').innerHTML = `Temperature: ${data}°C`;
+
+						document.getElementById('temp').innerHTML = data
+
+						loader.style.display = "none";
+
+					} else {
+
+						document.getElementById('temperature').innerHTML = "Temperature System is off";
+
+						document.getElementById('temp').innerHTML = 'OFF'
+
+						loader.style.display = "none";
+
+					}
+
+				})
+
+				.catch(error => {
+
+					console.log('Error fetching temperature:', error);
+
+				});
+
+		}
+
+
+
+
+		// Function to fetch door status data from Firebase
+
+		function fetchDoorStatus() {
+
+			fetch('https://esp32app2-default-rtdb.firebaseio.com/HOME%20SECURITY%20SYSTEM/Door%20Status:%20.json')
+
+				.then(response => response.json())
+
+				.then(data => {
+
+					// Display door status data on the web page
+
+					document.getElementById('doorStatus').innerHTML = `Door Status: ${data}`;
+
+				})
+
+				.catch(error => {
+
+					console.log('Error fetching door status:', error);
+
+				});
+
+		}
+
+		function fetchUserName() {
+
+			fetch('https://esp32app2-default-rtdb.firebaseio.com/HOME%20SECURITY%20SYSTEM/User%20Detected%20Name:%20.json')
+
+				.then(response => response.json())
+
+				.then(data => {
+
+					// Display door status data on the web page
+
+					document.getElementById('userName').innerHTML = `User Name: ${data}`;
+
+				})
+
+				.catch(error => {
+
+					console.log('Error fetching door status:', error);
+
+				});
+
+		}
+
+
+
+
+		// Function to continuously fetch data
+
+		function fetchData() {
+
+			fetchTemperature();
+
+			fetchDoorStatus();
+
+			fetchUserName();
+
+		}
+
+
+
+
+		// Call fetchData function every 5 seconds
+
+		setInterval(fetchData, 500);
+
+
+
+
+
+
+	</script>
+
+</head>
+
+
+
+
+<body>
+
+	<div id="loader">
+
+		<div class="loader"></div>
+
+	</div>
+
+	<h1>Home Security Monitoring</h1>
+
+
+
+
+	<div id="temperature"></div>
+
+
+
+
+	<div id="doorStatus"></div>
+
+
+
+
+	<div id="userName"></div>
+
+
+
+
+	<div class="t">
+
+		<div class="t__inner">
+
+			<div class="t__value">
+
+				<span class="t__digit" id="temp" data-temp></span>
+
+				<span class="t__degree">°</span>
+
+			</div>
+
+
+
+
+			<span class="t__units">
+
+				<button class="t__unit" type="button" value="c" aria-label="Celsius" data-scale>C</button>
+
+			</span>
+
+		</div>
+
+	</div>
+
+</body>
+
+
+
+
+</html>
